@@ -15,3 +15,11 @@
 
 // Import commands.js using ES2015 syntax:
 import './commands'
+afterEach(function () {
+  if (this.currentTest.state === "failed") {
+    cy.task("analyzeFailure", {
+      title: this.currentTest.title,
+      error: this.currentTest.err.message,
+    });
+  }
+});
