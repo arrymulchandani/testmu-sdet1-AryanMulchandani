@@ -17,7 +17,7 @@
 [![Cypress](https://img.shields.io/badge/Cypress-17202C?style=for-the-badge&logo=cypress&logoColor=white)](https://www.cypress.io/)
 [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![Cucumber](https://img.shields.io/badge/Cucumber-23D96C?style=for-the-badge&logo=cucumber&logoColor=white)](https://cucumber.io/)
-[![AI Powered](https://img.shields.io/badge/AI%20Powered-GPT%20%2B%20Claude-blueviolet?style=for-the-badge&logo=openai&logoColor=white)]()
+[![AI Powered](https://img.shields.io/badge/AI%20Powered-Gemini%202.5%20Flash-blueviolet?style=for-the-badge&logo=google&logoColor=white)]()
 [![Status](https://img.shields.io/badge/Status-Complete%20✓-success?style=for-the-badge)]()
 
 <br/>
@@ -103,16 +103,53 @@ All prompts are documented in [`prompts.md`](./prompts.md) — exactly as writte
 
 **Chosen Option: 🔍 Failure Explainer (Option A)**
 
-When a test fails, the framework automatically:
-1. Captures the page state / API response at the point of failure
-2. Sends it to an LLM with structured context
-3. Gets back a **plain English explanation** of what broke + a **suggested fix**
-4. Attaches this analysis directly to the test report
-
-This means zero manual log-diving for first-level failure triage. The LLM does it.
-
 > **Why Option A over Option B?**  
 > Failure explanation gives immediate, actionable value to any developer reading a test report — not just QA engineers. A flaky classifier is useful at scale, but a failure explainer is useful on every single run, immediately. When the team is moving fast, instant context wins.
+
+#### How It Works — End to End
+
+```
+Test Fails
+    │
+    ▼
+Cypress after() hook captures:
+  • Test name
+  • Raw Cypress error message
+    │
+    ▼
+explainFailure() sends a structured prompt to
+Gemini 2.5 Flash via REST API:
+  • What likely broke?
+  • Root cause?
+  • Suggested fix?
+  • Real bug / flaky test / test issue?
+    │
+    ▼
+Gemini responds with a structured plain-English analysis
+    │
+    ▼
+Result is written to cypress/reports/ai-failure-report.json
+as a JSON array entry with three fields:
+  {
+    "test":       <test name>,
+    "error":      <raw Cypress error>,
+    "aiAnalysis": <full Gemini explanation>
+  }
+```
+
+Every failed test appends its own entry to `ai-failure-report.json`, so a single report file captures the full AI triage for an entire test run. No manual log-diving — open one file, get the full picture.
+
+#### Sample Report Output
+
+```json
+[
+  {
+    "test": "Intentional failure to trigger AI explanation",
+    "error": "Timed out retrying after 4000ms: Expected to find element: '.this-element-does-not-exist', but never found it.",
+    "aiAnalysis": "### Test Analysis\n\n**Error Message:** Timed out retrying...\n\n#### 1. What likely broke?\nThe test execution failed because Cypress attempted to locate a DOM element with the CSS selector `.this-element-does-not-exist` but it was absent within the 4000ms timeout.\n\n#### 2. Root Cause?\nThe element targeted by the selector was not present in the DOM — possibly a missing/removed feature, an incorrect selector, a timing/race condition, or an incorrect page state.\n\n#### 3. Suggested Fix?\n- Inspect the DOM manually to verify the element exists\n- If it should be there → report as an Application Bug\n- If the selector is wrong → update the test step\n- If it's a timing issue → increase timeout (last resort)\n\n#### 4. Verdict\n**Real Bug** — if the element is required by the spec and the app fails to render it."
+  }
+]
+```
 
 ---
 
@@ -122,6 +159,7 @@ This means zero manual log-diving for first-level failure triage. The LLM does i
 
 - Node.js `v18+`
 - npm `v9+`
+- A valid **Gemini API key** (for the LLM Failure Explainer)
 
 ### Installation
 
@@ -134,22 +172,31 @@ cd testmu-sdet1-AryanMulchandani
 npm install
 ```
 
-### Run Tests
+### Environment Setup
+
+Create a `.env` file in the root of the project:
 
 ```bash
-# Run all tests (headless)
-npx cypress run
-
-# Run tests with Cypress UI (headed)
-npx cypress open
-
-# Run a specific feature
-npx cypress run --spec "cypress/e2e/features/login.feature"
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-### View Reports
+> Without this key, the AI analysis step is skipped gracefully and a message is logged instead.
 
-After a run, find generated reports in the `/reports` directory. AI-generated failure explanations are embedded directly inside the report output.
+### Running the LLM Failure Explainer
+
+The AI integration lives in the `llm-failure-explainer` feature file. Run it with:
+
+```bash
+npx cypress run --spec "cypress/e2e/features/llm-failure-explainer.feature"
+```
+
+This will intentionally trigger a test failure, send the error to **Gemini 2.5 Flash**, and write the full AI analysis to:
+
+```
+cypress/reports/ai-failure-report.json
+```
+
+> **Note:** The other feature files (Login, Dashboard, API) contain the test cases from Task 2 and are not wired to the LLM. They are structured as BDD scenarios for framework demonstration purposes only.
 
 ---
 
