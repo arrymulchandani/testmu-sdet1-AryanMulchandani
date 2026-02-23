@@ -169,7 +169,7 @@ git clone https://github.com/arrymulchandani/testmu-sdet1-AryanMulchandani.git
 cd testmu-sdet1-AryanMulchandani
 
 # Install dependencies
-npm install
+npm install --legacy-peer-deps``
 ```
 
 ### Environment Setup
