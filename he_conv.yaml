@@ -1,0 +1,55 @@
+version: "0.1"
+globalTimeout: 90
+testSuiteTimeout: 90
+testSuiteStep: 90
+runson: ${matrix.os}
+cypress: true
+concurrency: 2
+jobLabel:
+  - heJob
+pre:
+  - npm install cypress@15.10.0 --legacy-peer-deps
+  - npm install @badeball/cypress-cucumber-preprocessor@latest --legacy-peer-deps
+  - npm install @bahmutov/cypress-esbuild-preprocessor@latest --legacy-peer-deps
+  - npm install esbuild@latest --legacy-peer-deps
+  - npm install cypress@15.10.0 --legacy-peer-deps
+cacheKey: '{{ checksum "package.lock.json" }}'
+cacheDirectories:
+  - node_modules
+  - cypressCache
+env:
+  CYPRESS_CACHE_FOLDER: cypressCache
+  HYPEREXECUTE_CUSTOM_BUILD: TestMu SDET1 - Cypress BDD
+matrix:
+  browser:
+    - Chrome-latest
+    - Firefox-latest
+  test:
+    - ./cypress/e2e/features/api/api.feature
+    - ./cypress/e2e/features/dashboard/dashboard.feature
+    - ./cypress/e2e/features/llmFailure/llm-failure-demo.feature
+    - ./cypress/e2e/features/login/login.feature
+  os:
+    - win
+testSuites:
+  - npx cypress run --browser=$browser --headed --config video=false --spec
+    $test --config-file cypress.config.js
+cypressOps:
+  DedicatedProxy: false
+  Build: TestMu SDET1 - Cypress BDD
+  BuildTags: []
+  Tags: []
+  Network: false
+  GeoLocation: ""
+  ReporterConfigFile: base_reporter_config.json
+  ProjectAutoCreate: true
+uploadArtefacts: []
+project:
+  name: cypress_project
+  differentialUpload:
+    enabled: true
+    ttlHours: 60
+combineTasksInMatrixMode: true
+runtime:
+  language: node
+  version: 16.18.1

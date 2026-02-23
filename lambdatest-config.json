@@ -1,0 +1,42 @@
+{
+  "lambdatest_auth": {
+    "username": "",
+    "access_key": ""
+  },
+  "browsers": [
+    {
+      "browser": "Chrome",
+      "platform": "Windows 10",
+      "versions": [
+        "latest"
+      ]
+    },
+    {
+      "browser": "Firefox",
+      "platform": "Windows 10",
+      "versions": [
+        "latest"
+      ]
+    }
+  ],
+  "run_settings": {
+    "reporter_config_file": "base_reporter_config.json",
+    "build_name": "TestMu SDET1 - Cypress BDD",
+    "parallels": 2,
+    "specs": "./cypress/e2e/features/**/*.feature",
+    "ignore_files": "",
+    "network": false,
+    "video": true,
+    "headless": false,
+    "npm_dependencies": {
+      "cypress": "15.10.0",
+      "@badeball/cypress-cucumber-preprocessor": "latest",
+      "@bahmutov/cypress-esbuild-preprocessor": "latest",
+      "esbuild": "latest"
+    }
+  },
+  "tunnel_settings": {
+    "tunnel": false,
+    "tunnel_name": null
+  }
+}

@@ -16,6 +16,9 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
+    "lt:run": "node run-lt.js",
+    "lt:run:parallel": "lambdatest-cypress run --parallels 2",
+    "cy:local": "cypress run",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
